@@ -113,3 +113,52 @@ class Viewer(object):
         gluPerspective(70, aspect_ratio, 0.1, 1000.0)
         glTranslated(0, 0, -15)
 
+    def get_ray(self, x, y):
+        """
+        Generate a ray beginning at the near plane, in the direction that
+        the x, y coordinates are facing
+
+        Consumes: x, y coordinates of mouse on screen
+        Return: start, direction of the ray
+        """
+        self.init_view()
+
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+
+        # get two points on the line.
+        start = numpy.array(gluUnProject(x, y, 0.001))
+        end = numpy.array(gluUnProject(x, y, 0.999))
+
+        # convert those points into a ray
+        direction = end - start
+        direction = direction / norm(direction)
+
+        return (start, direction)
+
+    def pick(self, x, y):
+        """ Execute pick of an object. Selects an object in the scene. """
+        start, direction = self.get_ray(x, y)
+        self.scene.pick(start, direction, self.modelView)
+
+    def move(self, x, y):
+        """ Execute a move command on the scene. """
+        start, direction = self.get_ray(x, y)
+        self.scene.move_selected(start, direction, self.inverseModelView)
+
+    def rotate_color(self, forward):
+        """
+        Rotate the color of the selected Node.
+        Boolean 'forward' indicates direction of rotation.
+        """
+        self.scene.rotate_selected_color(forward)
+
+    def scale(self, up):
+        """ Scale the selected Node. Boolean up indicates scaling larger."""
+        self.scene.scale_selected(up)
+
+    def place(self, shape, x, y):
+        """ Execute a placement of a new primitive into the scene. """
+        start, direction = self.get_ray(x, y)
+        self.scene.place(shape, start, direction, self.inverseModelView)
+
